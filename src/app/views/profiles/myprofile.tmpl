@@ -1,0 +1,53 @@
+{{define "Title"}}Profile{{end}}
+{{define "body"}}
+
+	{{template "header"}}
+  {{$profile := .Profile}}
+<br /><br /><br /><br />
+	<!-- services -->
+    <section id="section-services" class="section pad-bot30 bg-white">
+        <div style="margin:10px;height:auto;padding-bottom:100px;">
+          <img src="data:image/jpeg;base64, {{$profile.Pic}}" alt="No Image" style="width:168px;height:168px;float:left;margin-right:10px;margin-bottom:10px;" />
+          <h1>{{$profile.Name}} <a href="/profiles/edit/{{.SafeKey}}">Edit</a></h1>
+          <b>Info:</b> {{$profile.Description}}
+        </div>
+        
+  </section>
+
+<!-- Modal -->
+<div class="modal fade" id="bookFinder" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+   
+        <input type="text" id="searchBook" placeholder="Find book" />
+        <select id="bookSubject">
+
+        </select><a href="#" class="btn btn-success" id="searchCatalog">Search</a>
+      </div>
+      <div class="modal-body">
+        <table class="table table-striped">
+          <tr><td>Book</td><td>Subject</td><td>Add</td></tr>
+          <tbody id="book_catalog">
+
+
+          </tbody>
+        </table>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-info" id="viewMoreBooks">More</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+    <script>
+      
+      
+    </script>
+	{{template "footer"}}
+{{end}}

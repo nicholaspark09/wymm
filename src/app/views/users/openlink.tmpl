@@ -1,0 +1,26 @@
+{{define "Title"}}Policy{{end}}
+{{define "body"}}
+
+	{{template "header"}}
+<section class="featured" class="section pad-bot30 bg-white">
+      <div class="container"> 
+        <div class="row mar-bot40">
+          <div class="col-md-6 col-md-offset-3">
+            
+            <div class="align-center">
+              <i class="fa fa-flask fa-5x mar-bot20"></i>
+              <h2 class="slogan">iPhone Login</h2>
+              <p>
+                <a href="wymmapp://login/{{.Token}}">Click here to Login</a>
+              </p>  
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <script>
+      window.location.assign("wymmapp://login/{{.Token}}");
+
+    </script>
+	{{template "footer"}}
+{{end}}

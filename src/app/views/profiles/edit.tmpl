@@ -1,0 +1,176 @@
+{{define "Title"}}Profile{{end}}
+{{define "body"}}
+
+	{{template "header"}}
+  {{$profile := .Profile}}
+<br /><br /><br /><br />
+	<!-- services -->
+    <section id="section-services" class="section pad-bot30 bg-white">
+        <div style="margin:10px;height:auto;padding-bottom:100px;">
+          <img src="data:image/jpeg;base64, {{$profile.Pic}}" alt="No Image" style="width:168px;height:168px;float:left;margin-right:10px;margin-bottom:10px;" />
+          <table style="table table-striped">
+            <tr><th>Name</th><td><input type="text" class="form-control" value="{{$profile.Name}}" id="profileName" /></td></tr>
+            <tr><th>Email</th><td><input type="text" class="form-control" value="{{$profile.Email}}" id="profileEmail" /></td></tr>
+            <tr><th>Phone</th><td><input type="text" class="form-control" value="{{$profile.Phone}}" id="profilePhone" /></td></tr>
+            <tr><th>Teacher:</th><td><select id="profileLevel"><option value="1">Golfer</option><option value="2">Teacher</option></select><a href="#" class="findInstructor" style="display:none;margin-left;10px;">Instructor Profile</a></td></tr>
+            <tr><th>City</th><td><input type="text" value="{{$profile.City}}" id="profileFindCity" /><br /><select id="profileCity" style="display:none;"></select></td></tr>
+            <tr><th>Description</th><td><input type="text" class="form-control" value="{{$profile.Description}}" id="profileDescription" /></td></tr>
+            <tr><td></td><td><a href="#" id="saveProfile" class="btn btn-info">Save</a></td></tr>
+          </table>
+        </div>
+        
+  </section>
+
+<!-- Modal -->
+<div class="modal fade" id="bookFinder" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+   
+        <input type="text" id="searchBook" placeholder="Find book" />
+        <select id="bookSubject">
+
+        </select><a href="#" class="btn btn-success" id="searchCatalog">Search</a>
+      </div>
+      <div class="modal-body">
+        <table class="table table-striped">
+          <tr><td>Book</td><td>Subject</td><td>Add</td></tr>
+          <tbody id="book_catalog">
+
+
+          </tbody>
+        </table>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-info" id="viewMoreBooks">More</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+    <script>
+        function ProfileManager(){
+          var that = this;
+          var cities = [];
+          var select = $(document).find("#profileCity");
+          var selectedCity = "{{$profile.City}}";
+          var teacher = "{{$profile.Level}}";
+
+
+          function Init(){
+
+            $(document).find("#profileLevel").val(teacher);
+            if(teacher==2){
+               $(document).find(".findInstructor").show();
+            }
+
+            if(selectedCity != ""){
+              var url = '/cities/mobileview/'+selectedCity;
+              $.get(url)
+              .done(function(data){
+                var results = $.parseJSON(data);
+                if(results['Result']=="Success"){
+                  $('#profileFindCity').val(results['City'].name);
+                }
+              });
+            }
+
+            $(document).on("keyup","#profileFindCity",function(e){
+              select.html('');
+              var val = $("#profileFindCity").val();
+              if(val.length>2){
+                $.get('/cities/search',{query:val})
+                .done(function(data){
+                  var results = $.parseJSON(data);
+                  if(results['Result']=="Success"){
+                    select.append('<option value=""></option>');
+                    for(var i in results['Cities']){
+                      select.append('<option value="'+results['Cities'][i].country+'">'+results['Cities'][i].name+'</option>');
+                    }
+                  }
+                  select.show();
+                });
+              }
+            });
+
+            $(document).on("change","#profileCity",function(e){
+              e.preventDefault();
+              var selected = $("#profileCity option:selected").text();
+              selectedCity = $("#profileCity option:selected").val();
+              $("#profileFindCity").val(selected);
+              console.log(selectedCity);
+              select.html('');
+              select.hide();
+            });
+
+            $(document).on("click","#saveProfile",function(e){
+              e.preventDefault();
+              var name = $(document).find("#profileName").val();
+              var email = $(document).find("#profileEmail").val();
+              var phone = $(document).find("#profilePhone").val();
+              var description = $(document).find("#profileDescription").val();
+              var city = selectedCity;
+              var level = $(document).find("#profileLevel").val();
+              var $that = $(this);
+              $that.attr('disabled',true);
+              $that.text("Saving...");
+              $that.attr('class','btn btn-warning');
+              $.ajax({
+                type: 'POST',
+                url: '/profiles/mobileedit',
+                data:{
+                  'name':name,
+                  'email':email,
+                  'description':description,
+                  'phone':phone,
+                  'city':selectedCity,
+                  'level':level
+                },
+                success: function(data){
+                  var results = $.parseJSON(data);
+                  $that.attr('disabled',false);
+                  if(results['Result']=="Success"){
+                    $that.text("Save");
+                    $that.attr('class','btn btn-success');
+                    if(level==2){
+                      $(document).find(".findInstructor").show();
+                    }
+                  }
+                },
+                error: function(){
+                  alert("No connection");
+                  $that.attr('disabled',false);
+                }
+              });
+            });
+
+            $(document).on("click",".findInstructor",function(e){
+              e.preventDefault();
+              var $that= $(this);
+              $that.text("Loading...");
+              $that.attr('disabled',true);
+              $.get('/instructors/findme')
+              .done(function(data){
+                console.log(data);
+                var results = $.parseJSON(data);
+                if(results['Result']=="Success"){
+                  window.location = '/instructors/myprofile/'+results['SafeKey'];
+                }else{
+                  $that.text("Instructor Profile");
+                  $that.attr('disabled',false);
+                }
+              });
+            });
+          }
+
+          Init();
+        }
+      
+        var Editor = new ProfileManager();
+    </script>
+	{{template "footer"}}
+{{end}}

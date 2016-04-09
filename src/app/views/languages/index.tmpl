@@ -1,0 +1,126 @@
+{{define "Title"}}Languages{{end}}
+{{define "body"}}
+
+	{{template "header"}}
+
+<br /><br /><br /><br />
+<section id="section-services" class="section pad-bot30 bg-white">
+	<div class="container">
+        <h1>Languages ({{.Language}}) <a href="#" class="btn btn-info" data-toggle="modal" data-target="#addModal">+ Language</a></h1>
+        
+        <table class="table table-striped">
+          <tbody id="lines_table">
+            {{range $key,$value := .Languages}}
+              <tr><td>{{$value.Name}}</td><td>{{$value.Locale}}</td><td>{{$value.Native}}</td></tr>
+            {{end}}
+          </tbody>
+          <tr><td><a href="#" id="moreLines" class="btn btn-info">More</a></td><td></td><td></td><td></td></tr>
+        </table>
+  </div>
+</section>
+
+<!-- Modal -->
+<div class="modal fade" id="lineFinder" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+          <h1>Line</h1>
+      </div>
+      <div class="modal-body">
+          <h4 id="lineName"></h4>
+          <b>Likes: </b><span id="likes"></span>  <b>Dislikes: </b><span id="dislikes"></span> <b>Views: </b><span id="views"></span>
+          <br /><br />
+          <b>Translation:</b><br />
+          <p id="translation">
+
+          </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-info" id="viewMoreBooks">More</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Modal -->
+<div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+          <h1>Add Language</h1>
+      </div>
+      <div class="modal-body">
+          <input type="text" class="form-control" id="newLanguageName" placeholder="Language Name" /><br />
+          <input type="text" class="form-control" id="newLanguageLocale" placeholder="Locale (en_US,es_ES,etc)" /><br />
+      </div>
+      <div class="modal-footer">
+        <div id="errorLabel" style="color:red;">
+
+        </div>
+        <button type="button" class="btn btn-info" id="createLine">Save</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+    <script>
+      function LangManager(){
+        var that = this;
+        var lines = [];
+        var target = "{{.Target}}";
+        var select = $(document).find("#targetLanguage");
+        var table= $(document).find("#lines_table");
+        var more = $(document).find("#moreLines");
+        var currentLine = null;
+        var errorLabel = $(document).find("#errorLabel");
+        var nativeLocale = "{{.Language}}";
+
+        this.Init = function(){
+          $(document).on("click","#createLine",function(e){
+            e.preventDefault();
+            var $that = $(this);
+            $that.attr('disabeld',true);
+            var name = $(document).find("#newLanguageName").val();
+            var target = $(document).find("#newLanguageLocale").val();
+            if(name == ""){
+              errorLabel.text("Fill in the language name please");
+            }else if(target == ""){
+              errorLabel.text("Fill in the official locale code");
+            }else{
+              errorLabel.text('');
+              $.ajax({
+                type: 'POST',
+                url: '/languages/mobileadd',
+                data:{
+                  'name':name,
+                  'locale':target,
+                  'native':nativeLocale
+                },
+                success: function(data){
+                  var results = $.parseJSON(data);
+                  if(results['Result']=="Success"){
+                    $(document).find("#addModal").modal('hide');
+                    table.append('<tr><td>'+name+'</td><td>'+target+'</td><td>'+nativeLocale+'</td></tr>');
+                    errorLabel.text('');
+                  }else{
+                    errorLabel.text(results['Error']);
+                  }
+                },
+                error: function(){
+                  errorLabel.text("No connection");
+                }
+              });
+            }
+          });
+        }
+
+        that.Init();
+      }
+      var Languages = new LangManager();
+    </script>
+	{{template "footer"}}
+{{end}}

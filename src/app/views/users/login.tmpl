@@ -1,0 +1,140 @@
+
+{{define "Title"}}Login{{end}}
+{{define "body"}}
+
+
+    {{template "header"}}
+    <br /><br /><br />
+    <div class="container">
+        <br /><br />
+        <form id="LoginForm">
+                <input type="text" class="form-control" placeholder="Email" id="Email" />
+                <br />
+                <a href="#" class="newletter" data-word="Login" style="width:120px;height:80px;line-height:80px;padding:10px;background:white;color:blue;box-shadow:0 0 5px #ccc;border-radius:10px;text-align:center;" id="registerButton">Login</a>
+        </form>
+        <br /><br />
+        <h4>Or</h4>
+        <a href="#" id="loginBtn" style="display:none;"><div style="padding:10px;margin:10px;border-radius:10px;box-shadow:0 0 5px #ccc;background:blue;color:white;">
+                  Facebook
+                </div></a>
+
+
+    </div>
+    <script>
+
+window.fbAsyncInit = function() {
+  //SDK loaded, initialize it
+  FB.init({
+    appId      : '659457344157115',
+    xfbml      : true,
+    version    : 'v2.5'
+  });
+ 
+  //check user session and refresh it
+  FB.getLoginStatus(function(response) {
+    if (response.status === 'connected') {
+      //user is authorized
+      document.getElementById('loginBtn').style.display = 'none';
+    } else {
+      //user is not authorized
+      document.getElementById('loginBtn').style.display = 'block';
+    }
+  });
+};
+
+
+    //load the JavaScript SDK
+(function(d, s, id){
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) {return;}
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/en_US/sdk.js";
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));
+ 
+//add event listener to login button
+document.getElementById('loginBtn').addEventListener('click', function() {
+
+  //do the login
+  FB.login(function(response) {
+    if (response.authResponse) {
+      var id = response.authResponse.userID;
+      var token = response.authResponse.accessToken;
+      console.log(response);
+      //user just authorized your app
+      document.getElementById('loginBtn').style.display = 'none';
+      FB.api('/me','get',{access_token:token, fields:'id,name,email'}, function(response) {
+        console.log(response);
+        $.ajax({
+          type: 'POST',
+          url: '/users/facebook',
+          data:{
+            'id':id,
+            'name':response.name,
+            'email':response.email,
+            'oauth':'facebook'
+          },
+          success: function(data){
+            console.log(data);
+            var results = $.parseJSON(data);
+            if(results['Result']=="Success"){
+                
+            }else{
+              alert(results['Error']);
+            }
+          },
+          error: function(){
+            alert("No connection");
+          }
+        });
+      });
+    }
+  }, {scope: 'email,public_profile', return_scopes: true});
+}, false);
+
+
+    $(document).ready(function(){
+
+
+        $(document).on("click","#registerButton", function(){
+
+                var $that = $(this);
+                var $email = $(document).find("#Email").val();
+                if($email.length<1)
+                {
+                    alert("Please fill in your email address");
+                }else{
+                    $that.attr('disabled',true);
+                    $.ajax({
+                        type: 'POST',
+                        url: '/users/login',
+                        data:{
+                            "email":$email
+                        },
+                        success: function(data){
+                            console.log(data);
+                            var results = $.parseJSON(data);
+                            if(results['Result']=="Success")
+                            {
+                                $(document).find("#LoginForm").hide();
+                                alert("An email was sent to "+$email+". Please check your email");
+                            }else
+                            {
+                                alert(results['Error']);
+                                $that.attr('disabled',false);
+                            }
+                        },
+                        error: function(){
+                            console.log("No connection");
+                            $that.attr('disabled',false);
+                        }
+                    });
+                }
+
+        });
+    });
+    </script>
+    {{template "footer"}}
+{{end}}
+
+

@@ -1,0 +1,249 @@
+{{define "Title"}}Videos{{end}}
+{{define "body"}}
+
+	{{template "header"}}
+<br /><br /><br /><br /><br />
+	<div class="container">
+        <h1>Countries</h1>
+        <table class="table table-striped">
+          <tr><th>Country</th><th>Nickname</th><th>Translations</th><th>Edit</th><th>Delete</th></tr>
+          <tr><td><input type="text" class="form-control" id="countryName" /></td><td><input type="text" class="form-control" id="countryNickname" /></td><td></td><td><a href="#" class="btn btn-success" id="addCountry">Create</a></td><td></td></tr>
+          <tbody id="countries_table">
+
+          </tbody>
+          <tr><td><a href="#" id="moreCountries" class="btn btn-info">More</a></td><td></td><td></td><td></td><td></td></tr>
+        </table>
+  </div>
+
+<!-- Modal -->
+<div class="modal fade" id="bookFinder" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+          Translate It
+      </div>
+      <div class="modal-body">
+        <table class="table table-striped">
+          <tr><td>Book</td><td>Subject</td><td>Add</td></tr>
+          <tbody id="book_catalog">
+
+
+          </tbody>
+        </table>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-info" id="viewMoreBooks">More</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+    <script>
+
+      function CountriesManager(){
+        var that =this;
+        var countries = [];
+        var table = $(document).find("#countries_table");
+        var more = $(document).find("#moreCountries");
+
+        this.Init = function(){
+          Index();
+          more.click(function(e){
+            e.preventDefault();
+            Index();
+          });
+
+          $(document).on("click",".deleteCountry",function(e){
+            var $that = $(this);
+            $that.attr('disabled',true);
+            if(confirm("Delete?")){
+              var $id = $that.attr('data-id');
+              $.ajax({
+                type: 'POST',
+                url: '/countries/delete/',
+                data:{
+                  'safekey':$id
+                },
+                success: function(data){
+                  var $results = $.parseJSON(data);
+                  if($results['Result']=="Success"){
+                    $that.closest('tr').remove();
+                  }else{
+                    alert($results['Error']);
+                    $that.attr('disabled',false);
+                  }
+                },
+                error: function(){
+                  alert("No connection");
+                  $that.attr('disabled',false);
+                }
+              }); 
+            }
+          });
+
+          $(document).on("click","#addCountry",function(e){
+            var $that = $(this);
+            $that.attr('disabled',true);
+            var name = $(document).find("#countryName").val();
+            var nickname = $(document).find("#countryNickname").val();
+            if(name == ""){
+              alert("Please fill in the name");
+            }else{
+              $.ajax({
+                type: 'POST',
+                url: '/countries/mobileadd',
+                data:{
+                  'name':name,
+                  'nickname':nickname
+                },
+                success: function(data){
+                  var $results = $.parseJSON(data);
+                  if($results['Result']=="Success"){
+                    var country = {name:name,nickname:nickname,safekey:$results['SafeKey']};
+                    countries.push(country);
+                    table.prepend('<tr><td><a href="/countries/view/'+country.safekey+'">'+country.name+'</a></td><td>'+country.nickname+'</td><td><a href="#" class="viewTranslations" data-id="'+country.safekey+'">Translations</a></td><td><a href="#" class="editCountry" data-id="'+country.safekey+'">Edit</a></td><td><a href="#" class="deleteCountry" data-id="'+country.safekey+'">Delete</a></td></tr>');
+                  }else{
+                      alert($results['Error']);
+                  }
+                  $that.attr('disabled',false);
+                },
+                error: function(){
+                  alert("No connection");
+                  $that.attr('disabled',false);
+                }
+              });
+            }
+          });
+        }
+
+
+
+        function Index(){
+          more.attr('disabled',true);
+          $.get('/countries/mobileindex',{current:countries.length})
+          .done(function(data){
+            var $results = $.parseJSON(data);
+            if($results['Result']=="Success"){
+              var temp = $results['Countries'];
+              var safekeys = $results['SafeKeys'];
+              for(var i in temp){
+                var country = temp[i];
+                country.safekey = safekeys[i];
+                AddRow(country);
+                countries.push(country);
+              }
+              if(temp.length==50){
+                more.attr('disabled',false);
+              }else{
+                more.text("No more");
+              }
+            }else{
+              alert($results['Error']);
+            }
+          });
+        }
+
+        function AddRow(country){
+          table.append('<tr><td><a href="/countries/view/'+country.safekey+'">'+country.name+'</a></td><td>'+country.nickname+'</td><td><a href="#" class="viewTranslations" data-id="'+country.safekey+'">Translations</a></td><td><a href="#" class="editCountry" data-id="'+country.safekey+'">Edit</a></td><td><a href="#" class="deleteCountry" data-id="'+country.safekey+'">Delete</a></td></tr>');
+        }
+
+        that.Init();
+      }
+
+      var Countries = new CountriesManager();
+
+      /*
+      function VideosManager(){
+        var current = 0;
+        var videos = [];
+        var that = this;
+        var table = $(document).find("#videos_table");
+        var more = $(document).find("#viewVideos");
+
+        this.Init = function(){
+          Index();
+
+          more.click(function(e){
+            e.preventDefault();
+            Index();
+          });
+
+          $(document).on("click",".deleteVideo",function(e){
+            e.preventDefault();
+            var id = $(this).attr('data-id');
+            var $that = $(this);
+            if(confirm("Delete?")){
+              $that.text("Deleting...");
+              $that.attr('disabled',true);
+              $.ajax({
+                type: 'POST',
+                url: '/videos/delete',
+                data:{
+                  'video':$that.attr('data-id')
+                },
+                success: function(data){
+                  var $results = $.parseJSON(data);
+                  if($results['Result']=="Success"){
+                    $that.closest('tr').remove();
+                  }else{  
+                    $that.text("Delete");
+                    $that.attr('disabled',false);
+                    alert($results['Error']);
+                  }
+                },
+                error: function(){
+                  console.log("No connection");
+                }
+              });
+            }else{
+              return;
+            }
+          });
+        }
+
+        function Index(){
+          more.attr('disabled',true);
+          $.get('/videos/mobileindex',{offset:videos.length})
+          .done(function(data){
+              var $results = $.parseJSON(data);
+              console.log(data);
+              if($results['Result']=="Success"){
+                var temp = $results['Videos'];
+                for(var i in temp){
+                  videos.push(temp[i]);
+                  table.append('<tr><td><img src="#" id="'+temp[i].safekey+'" alt="Thumb" style="width:80px;height:80px;margin-right:10px;" /><a href="/videos/view/'+temp[i].safekey+'">'+temp[i].name+'</a></td><td>'+temp[i].created+'</td><td>Edit</td><td></td><td>Share</td><td><a href="#" class="deleteVideo" data-id="'+temp[i].safekey+'">Delete</a></td></tr>');
+                   FindThumb(temp[i].safekey);
+                }
+                if(temp.length<10){
+                  more.text("No More");
+                }else{
+                  more.attr('disabled',false);
+                }
+              }else{
+                alert(results['Error']);
+                more.attr('disabled',false);
+              }
+            });
+          }
+
+        function FindThumb(key){
+          $.get('/thumbs/mobileview/',{safekey:key},function(data){
+            var results = $.parseJSON(data);
+            if(results['Result']=="Success"){
+              $(document).find("#"+key).attr('src','data:image/jpeg;base64, '+results['Body']);
+            }
+          });
+        }
+
+        that.Init();
+      }
+
+      var Videos = new VideosManager();
+      */
+    </script>
+	{{template "footer"}}
+{{end}}

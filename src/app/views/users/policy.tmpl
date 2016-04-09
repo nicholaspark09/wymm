@@ -1,0 +1,31 @@
+{{define "Title"}}Policy{{end}}
+{{define "body"}}
+
+	{{template "header"}}
+  {{$video := .Video}}
+<section class="featured">
+      <div class="container"> 
+        <div class="row mar-bot40">
+          <div class="col-md-6 col-md-offset-3">
+            
+            <div class="align-center">
+              <i class="fa fa-flask fa-5x mar-bot20"></i>
+              <h2 class="slogan">Privacy Policy</h2>
+              <p>
+                We don't share your information or videos with any other person unless you want us to. We do, however, analyze the swings to get a better understanding of how the golf swing works. The videos are anonymous and we don't share the information with anyone. An algorithm will run through the images to try to learn more about the golf swing.
+              </p>  
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- services -->
+    <section id="section-services" class="section pad-bot30 bg-white">
+    <div class="container">
+        <h1>Questions?</h1>
+        <p>Please direct any questions to nicholaspark09@gmail.com. He's the guy running the whole thing!</p>
+    </div>
+  </section>
+	{{template "footer"}}
+{{end}}

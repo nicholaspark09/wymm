@@ -1,0 +1,51 @@
+{{define "nav"}}
+
+<!-- Fixed navbar 
+    <div class="navbar navbar-default navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#"><b>QUICKLISH</b></a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right">
+            <li><a href="/subjects" class="newletter" data-word="Subjects">Subjects</a></li>
+            <li><a href="/campus" class="newletter" data-word="Campus">Campus</a></li>
+            <li><a href="/courses" class="newletter" data-word="Course">Courses</a></li>
+            <li><a href="/users/login" class="newletter" data-word="Profile">Profile</a></li>
+            <li><a href="/users/home">Home</a></li>
+            <li><a href="/users/languages">Language</a></li>
+            
+
+          </ul>
+        </div><!--/.nav-collapse 
+      </div>
+    </div>
+-->
+<!-- Fixed navbar --> 
+
+    <section id="header" class="appear"></section>
+    <div class="navbar navbar-fixed-top" role="navigation" data-0="line-height:100px; height:100px; background-color:rgba(0,0,0,0.3);" data-300="line-height:60px; height:60px; background-color:rgba(0,0,0,1);">
+       <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="fa fa-bars color-white"></span>
+          </button>
+          <h1><a class="navbar-brand" href="/" data-0="line-height:90px;" data-300="line-height:50px;"> Lines
+          </a></h1>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav" id="headerLinks" data-0="margin-top:20px;" data-300="margin-top:5px;">
+            <li><a href="/lines">Lines</a>
+            </li>
+            <li><a href="/users/languages">Language</a></li>
+            <li><a href="/users/logout" class="newletter" data-word="Logout">Logout</a></li>
+          </ul>
+        </div><!--/.navbar-collapse -->
+      </div>
+    </div>
+{{end}}

@@ -1,0 +1,88 @@
+{{define "Title"}}Pickup Lines{{end}}
+{{define "body"}}
+  {{template "header" .}}
+<script src="/js/jquery.scrollTo-1.4.3.1-min.js"></script>
+  <script src="/js/jquery.localscroll-1.2.7-min.js"></script>
+<style type="text/css">
+#parallax1{ 
+  background-image: url(../img/parallax/img1.jpg);
+}
+#parallax2{ 
+  background-image: url(../img/parallax/img2.jpg);
+}
+#testimonials{  
+  background-image: url("http://www.eventbrowse.com/wp-content/uploads/2015/05/nyc-skyline-june-2012-bw-jeff-stein.jpg");
+}
+#subjects{
+  list-style-type:none;
+  width:100%;
+  text-align:center;
+  margin:0;
+  padding:0;
+}
+#subjects li{
+  height:50px;
+  line-height:50px;
+  font-size:20px;
+}
+#subjects li a{
+  text-decoration: none;
+  color: #000;
+  display: block;
+
+  -webkit-transition: font-size 0.3s ease, background-color 0.3s ease;
+  -moz-transition: font-size 0.3s ease, background-color 0.3s ease;
+  -o-transition: font-size 0.3s ease, background-color 0.3s ease;
+  -ms-transition: font-size 0.3s ease, background-color 0.3s ease;
+  transition: font-size 0.3s ease, background-color 0.3s ease;
+}
+#subjects li a:hover {
+  font-size: 30px;
+}
+</style>
+<br /><br /><br /><br />
+<section id="section-services" class="section pad-bot30 bg-white">
+  <div class="container">
+    <h1>Lines</h1>
+      <h4>Pickup Lines for the World</h4>
+<!--
+    <h2>Courses</h2>
+    <table class="table table-striped">
+      <tr><td><input type="text" class="form-control" placeholder="Search Title" /></td><td><select class="form-control" id="courseSubject"><option value="-1">Subject</option>
+          {{range $i,$val := .Subjects}}
+            <option value="{{$val.SafeKey}}">{{$val.Name}}</option>
+          {{end}}
+        </select></td><td><a href="#" id="searchCourses" class="btn btn-info">Search</a></tr>
+        <tbody id="courses_table">
+
+        </tbody>
+        <tr><td><a href="#" id="viewMoreCourses">More</a></td><td></td></tr>
+    </table>
+-->
+  </div>
+</section>
+<div class="modal fade" id="classesView" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <input type="text" class="form-control" placeholder="Search Class" />
+      </div>
+      <div class="modal-body">
+            <table class="table table-striped">
+                  <tbody id="courses_table">
+                  </tbody>
+                  <tr><td><a href="#" id="viewMoreCourses">More</a></td></tr>
+              </table>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+  <script>
+    
+  </script>
+  {{template "footer" .}}
+{{end}}

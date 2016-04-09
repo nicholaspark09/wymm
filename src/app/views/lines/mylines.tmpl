@@ -1,0 +1,374 @@
+{{define "Title"}}Lines{{end}}
+{{define "body"}}
+
+	{{template "header"}}
+
+<br /><br /><br /><br />
+<section id="section-services" class="section pad-bot30 bg-white">
+	<div class="container">
+        <h1>My Lines <a href="#" class="btn btn-info" data-toggle="modal" data-target="#addModal">+ Line</a></h1>
+        
+        <table class="table table-striped">
+          <tbody id="lines_table">
+
+          </tbody>
+          <tr><td><a href="#" id="moreLines" class="btn btn-info">More</a></td><td></td><td></td><td></td></tr>
+        </table>
+  </div>
+</section>
+
+<!-- Modal -->
+<div class="modal fade" id="lineFinder" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+          <h1>Line</h1>
+      </div>
+      <div class="modal-body">
+          <h4 id="lineName"></h4>
+          <b><span id="likes" style="margin:10px;"></span></b>  <b><span id="dislikes" style="margin:10px;"></span></b> <b>Views: </b><span id="views"></span>
+          <br /><br />
+          <b>Translation:</b><br />
+          <p id="translation">
+
+          </p>
+      </div>
+      <div class="modal-footer">
+        <div id="lineError" style="color:red;">
+
+        </div>
+        <button type="button" class="btn btn-info" id="viewMoreBooks">More</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Modal -->
+<div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+          <h1>Add Line</h1>
+      </div>
+      <div class="modal-body">
+          <input type="text" class="form-control" id="newLineName" placeholder="Pickup Line" /><br />
+      </div>
+      <div class="modal-footer">
+        <div id="errorLabel" style="color:red;">
+
+        </div>
+        <button type="button" class="btn btn-info" id="createLine">Save</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+    <script>
+      function LinesManager(){
+        var that = this;
+        var lines = [];
+        var target = "{{.Target}}";
+        var locale = "{{.Locale}}";
+        var select = $(document).find("#targetLanguage");
+        var table= $(document).find("#lines_table");
+        var more = $(document).find("#moreLines");
+        var currentLine = null;
+        var errorLabel = $(document).find("#errorLabel");
+        var lineError = $(document).find("#lineError");
+
+        this.Init = function(){
+          getLanguages();
+          select.on("change",function(e){
+            e.preventDefault();
+            var val = $(this).val();
+            setLanguage(val);
+          });
+          Index();
+
+          more.on("click", function(e){
+            e.preventDefault();
+            Index();
+          });
+
+          $(document).on("click","#addTranslation",function(e){
+            e.preventDefault();
+          });
+
+          $(document).on("click","#createLine",function(e){
+            e.preventDefault();
+            AddIt();
+          });
+
+          //Like it
+          $(document).on("click",".likeIt",function(e){
+            e.preventDefault();
+            var $that = $(this);
+            $that.attr('disabled',true);
+            var safekey = $that.attr('data-id');
+            $.get('/likes/add',{safekey:safekey})
+            .done(function(data){
+              var results = $.parseJSON(data);
+              if(results['Result']=="Success"){
+                $that.attr('class','unlikeIt');
+                $that.attr('data-id',results['SafeKey']);
+                $that.text("Liked");
+              }else{
+                lineError.text(results['Error']);
+              }
+            });
+          });
+
+          //Like it
+          $(document).on("click",".unlikeIt",function(e){
+            e.preventDefault();
+            var $that = $(this);
+            $that.attr('disabled',true);
+            var safekey = $that.attr('data-id');
+            $.get('/likes/delete',{safekey:safekey})
+            .done(function(data){
+              var results = $.parseJSON(data);
+              if(results['Result']=="Success"){
+                $that.attr('class','likeIt');
+                $that.attr('data-id',currentLine.safekey);
+                $that.text("Like: ("+results['Likes']+")");
+              }else{
+                lineError.text(results['Error']);
+              }
+            });
+          });
+
+          //Like it
+          $(document).on("click",".dislikeIt",function(e){
+            e.preventDefault();
+            var $that = $(this);
+            $that.attr('disabled',true);
+            var safekey = $that.attr('data-id');
+            $.get('/dislikes/add',{safekey:safekey})
+            .done(function(data){
+              var results = $.parseJSON(data);
+              if(results['Result']=="Success"){
+                $that.attr('class','undislikeIt');
+                $that.attr('data-id',results['SafeKey']);
+                $that.text("Disliked");
+              }else{
+                lineError.html(results['Error']);
+              }
+            });
+          });
+
+          //Undislike it
+          $(document).on("click",".undislikeIt",function(e){
+            e.preventDefault();
+            var $that = $(this);
+            $that.attr('disabled',true);
+            var safekey = $that.attr('data-id');
+            $.get('/dislikes/delete',{safekey:safekey})
+            .done(function(data){
+              var results = $.parseJSON(data);
+              if(results['Result']=="Success"){
+                $that.attr('class','dislikeIt');
+                $that.attr('data-id',currentLine.safekey);
+                $that.text("Dislike: ("+results['Dislikes']+")");
+              }else{
+                lineError.html(results['Error']);
+              }
+            });
+          });
+
+          $(document).on("keyup","#translationName",function(e){
+            if(e.keyCode == 13){
+              e.preventDefault();
+              var $that = $(this);
+              lineError.text("Saving translation...");
+              $that.attr('disabled',true);
+              $.ajax({
+                type: 'POST',
+                url: '/translateds/add',
+                data:{
+                  'body':$that.val(),
+                  'controller':'lines',
+                  'safekey':currentLine.safekey,
+                  'locale':locale,
+                },
+                success: function(data){
+                  var results = $.parseJSON(data);
+                  if(results['Result']=="Success"){
+                    $(document).find("#translation").html('<p>'+$that.val()+'</p>');
+                    lineError.text("Saved.");
+                  }else{
+                    lineError.text(results['Error']);
+                  }
+                },
+                error: function(){
+                  lineError.text("No connection. Please try again");
+                  $that.attr('disabled',false);
+                }
+              });
+              console.log($that.val());
+            }
+          });
+
+          $(document).on("click",".deleteLine",function(e){
+            e.preventDefault();
+            var $that=$(this);
+            if(confirm("Delete?")){
+              $that.attr('disabled',true);
+              $that.text("Deleting...");
+              $.ajax({
+                type: 'POST',
+                url: '/lines/delete',
+                data:{
+                  'safekey':$that.attr('data-id')
+                },
+                success: function(data){
+                  var results = $.parseJSON(data);
+                  if(results['Result']=="Success"){
+                    $that.closest('tr').remove();
+                  }else{
+                    alert(results['Error']);
+                    $that.attr('disabled',false);
+                  }
+                },
+                error: function(){
+                  alert("No connection");
+                  $that.attr('disabled',false);
+                }
+              });
+            }
+          });
+
+          $(document).on("click",".viewIt",function(e){
+            e.preventDefault();
+            var key = $(this).attr('data-id');
+            for(var i in lines){
+              if(lines[i].safekey == key){
+                currentLine = lines[i];
+                break;
+              }
+            }
+            if(currentLine != null){
+              $(document).find("#lineName").text(currentLine.name);
+             
+              $(document).find("#dislikes").text(currentLine.dislikes);
+              $(document).find("#views").text(currentLine.views);
+              $(document).find("#lineFinder").modal('show');
+              $.get('/lines/mobileview',{safekey:currentLine.safekey,locale:locale})
+              .done(function(data){
+                console.log(data);
+                var results = $.parseJSON(data);
+                if(results['Result']=="Success")
+                {
+                    if(results['Translated']==""){
+                      $(document).find("#translation").html('<input type="text" id="translationName" data-id="'+currentLine.safekey+'" placeholder="Translation" /> <br /><a href="#" id="addTranslation"');
+                    }else{
+                      $(document).find("#translation").text(results['Translated'].name);
+                    }
+                    var text = '<a href="#" class="likeIt" data-id="'+currentLine.safekey+'">Like: '+currentLine.likes+'</a>';
+                    if(results['Like']!=""){
+                      text = '<a href="#" class="unlikeIt" data-id="'+results['Like']+'">Liked: '+currentLine.likes+'</a>';
+                    }
+                     $(document).find("#likes").html(text);
+                     var dislikes = '<a href="#" class="dislikeIt" data-id="'+currentLine.safekey+'">Dislike: '+currentLine.dislikes+'</a>';
+                     if(results['Dislike']!=""){
+                        dislikes = '<a href="#" class="undislikeIt" data-id="'+results['Dislike']+'">Disliked: '+currentLine.dislikes+'</a>';
+                     }
+                     $(document).find("#dislikes").html(dislikes);
+                   }else{
+                    lineError.html(results['Error']);
+                   }
+              });
+            }
+          });
+        }
+
+        function AddIt(){
+          var button = $(document).find("#createLine");
+          button.attr('disabled',true);
+          var name = $(document).find("#newLineName").val();
+          if(name == ""){
+            errorLabel.text("Please put in a pickup line");
+          }else{
+            $.ajax({
+              type: 'POST',
+              url: '/lines/add',
+              data:{
+                'name':name,
+                'locale':target
+              },
+              success: function(data){
+                var results = $.parseJSON(data);
+                if(results['Result']=="Success"){
+                  errorLabel.text('');
+                  $(document).find("#addModal").modal('hide');
+                  var line = {name:name,likes:0,views:0,dislikes:0,rank:0,locale:target,safekey:results['SafeKey']};
+                  table.append('<tr><td><a href="#" class="viewIt" data-id="'+line.safekey+'">'+name+'</a></td><td>'+line.likes+'</td><td>'+line.dislikes+'</td><td>'+line.views+'</td><td><a href="#" class="editLine" data-id="'+line.safekey+'">Edit</a></td><td><a href="#" class="deleteLine" data-id="'+line.safekey+'">Delete</a></td></tr>');
+                  lines.push(line);
+                }else{
+                  errorLabel.html(results['Error']);
+                }
+              },
+              error: function(){
+                errorLabel.text("No Connection");
+              }
+            }); 
+          }
+          button.attr('disabled',false);
+        }
+
+        function getLanguages(){
+          $.get('/languages/mobileindex',{locale:locale})
+          .done(function(data){
+            select.html('');
+            var results = $.parseJSON(data);
+            for(var i in results['Languages']){
+              var l = results['Languages'][i];
+              select.append('<option value="'+l.locale+'">'+l.name+'</option>');
+            }
+            select.val(target);
+          });
+
+        }
+
+        function setLanguage(language){
+          $.get('/languages/settarget',{target:language})
+          .done(function(data){
+            target = language;
+            console.log("The target is "+target);
+            lines = [];
+            table.html('');
+            Index();
+          });
+        }
+
+        function Index(){
+          more.attr('disabled',true);
+          $.get('/lines/myindex',{offset:lines.length})
+          .done(function(data){
+            var results = $.parseJSON(data);
+            var keys = results['SafeKeys'];
+            for(var i in results['Lines']){
+              var line = results['Lines'][i];
+              line.safekey = keys[i];
+              var name = line.name;
+              table.append('<tr><td><a href="#" class="viewIt" data-id="'+keys[i]+'">'+name+'</a></td><td>'+line.likes+'</td><td>'+line.dislikes+'</td><td>'+line.views+'</td><td><a href="#" class="editLine" data-id="'+keys[i]+'">Edit</a></td><td><a href="#" class="deleteLine" data-id="'+keys[i]+'">Delete</a></td></tr>');
+              lines.push(line);
+            }
+            if(results['Lines'].length<10){
+              more.text("No More");
+            }else{
+              more.attr('disabled',false);
+            }
+          });
+        }
+
+        that.Init();
+      }
+     
+     var Lines = new LinesManager();
+    </script>
+	{{template "footer"}}
+{{end}}
